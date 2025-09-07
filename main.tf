@@ -125,21 +125,29 @@ resource "aws_autoscaling_group" "bastion" {
     "GroupTotalInstances",
   ]
 
-  tags = concat(
-    [
-      {
-        "key"                 = "Name"
-        "value"               = var.name
-        "propagate_at_launch" = true
-      },
-      {
-        "key"                 = "EIP"
-        "value"               = var.eip
-        "propagate_at_launch" = true
-      },
-    ],
-    var.extra_tags,
-  )
+  dynamic "tag" {
+    for_each = concat(
+      [
+        {
+          key                 = "Name"
+          value               = var.name
+          propagate_at_launch = true
+        },
+        {
+          key                 = "EIP"
+          value               = var.eip
+          propagate_at_launch = true
+        },
+      ],
+      var.extra_tags,
+    )
+
+    content {
+      key                 = tag.value.key
+      value               = tag.value.value
+      propagate_at_launch = tag.value.propagate_at_launch
+    }
+  }
 
   lifecycle {
     create_before_destroy = true
